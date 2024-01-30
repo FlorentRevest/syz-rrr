@@ -104,13 +104,6 @@ RUN ldconfig && \
 # Default jupyter's cwd to /root/
 WORKDIR /root
 
-# Copy the rrr api as the "rrr" python package
-COPY __init__.py /usr/local/lib/python3.10/dist-packages/rrr/__init__.py
-COPY perfetto_trace_pb2.py /usr/local/lib/python3.10/dist-packages/rrr/perfetto_trace_pb2.py
-
-# Copy the example notebook under jupyter's cwd
-COPY rrr.ipynb /root/
-
 # Install runtime dependencies
 RUN apt-get -qq update
 RUN apt-get -qq install -y gcc libguestfs-tools make flex bison libelf-dev bc linux-image-generic pahole gdb
