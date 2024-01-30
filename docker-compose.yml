@@ -1,0 +1,8 @@
+version: "3"
+services:
+  syz-rrr:
+    build: .
+    network_mode: host
+    volumes:
+      - ./rrr:/root/rrr
+      - ./rrr.ipynb:/root/rrr.ipynb
