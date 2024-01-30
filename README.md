@@ -34,8 +34,7 @@ syz-rrr is primarily meant to be used interactively from a Jupyter notebook.
 To ease the setup, a docker container is provided which can be started with:
 
 ```shell
-docker build -t florentrevest/syz-rrr:latest .
-docker run --network host -it florentrevest/syz-rrr:latest
+docker compose up
 ```
 
 This exposes a Jupyter runtime on port `8888` protected by the password "rrr".
