@@ -126,9 +126,13 @@ class Config:
     def from_url(cls, url):
         return cls(cached_download(url, "config"))
 
-    def __init__(self, path="/dev/null"):
+    def __init__(self, path="/dev/null", disabled_cfgs=[], enabled_cfgs=["DEBUG_INFO_BTF"]):
         self.path = path
-        self.disabled_cfgs = []
+        self.disabled_cfgs = disabled_cfgs
+        self.enabled_cfgs = enabled_cfgs
+
+    def enable(self, cfg):
+        self.enabled_cfgs.append(cfg)
 
     def disable(self, cfg):
         self.disabled_cfgs.append(cfg)
@@ -204,6 +208,14 @@ class Kernel:
                     cmd.append("-d")
                     cmd.append(cfg)
                 log(f"Disabling {', '.join(config.disabled_cfgs)}")
+                subprocess.run(cmd, capture_output=True, text=True, cwd=self.path)
+
+            if len(config.enabled_cfgs) != 0:
+                cmd = ["scripts/config"]
+                for cfg in config.enabled_cfgs:
+                    cmd.append("-e")
+                    cmd.append(cfg)
+                log(f"Enabling {', '.join(config.enabled_cfgs)}")
                 subprocess.run(cmd, capture_output=True, text=True, cwd=self.path)
 
             # Build on all CPUs
