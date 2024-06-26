@@ -63,8 +63,7 @@ RUN git -C /panda submodule update --init dtc && \
         --prefix=/usr/local \
         --disable-numa \
         --enable-llvm \
-        --extra-cflags="-Wno-error=deprecated-declarations" && \
-    rm -rf /panda/.git
+        --extra-cflags="-Wno-error=deprecated-declarations"
 
 RUN make -C /panda/build -j "$(nproc)"
 
