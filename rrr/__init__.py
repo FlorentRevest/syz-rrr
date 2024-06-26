@@ -165,7 +165,8 @@ class Stimulus:
 class Kernel:
     @classmethod
     def from_git(cls, config=Config(), commit_hash="HEAD", path="linux/",
-                 url="git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"):
+                 url="git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
+                 force_rebuild=False):
         # Only clone linux once
         if not os.path.exists(path):
             log(f"Cloning {url} to {path} ...")
@@ -189,7 +190,7 @@ class Kernel:
         if checkout.returncode:
             raise Exception("Checking out commit hash failed: " + checkout.stderr)
 
-        return cls(path, config)
+        return cls(path, config, force_rebuild)
 
     def __init__(self, path, config=Config(), force_rebuild=False):
         self.path = path
