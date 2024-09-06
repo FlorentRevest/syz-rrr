@@ -143,11 +143,9 @@ WORKDIR /root
 RUN apt-get -qq update
 RUN apt-get -qq install -y gcc libguestfs-tools make flex bison libelf-dev bc linux-image-generic pahole gdb
 
-# Install bpftool from Debian's repository because Ubuntu 22.04 doesn't have it...
-# TODO: Find a more reliable way to download it
-RUN wget http://ftp.ch.debian.org/debian/pool/main/l/linux/bpftool_7.3.0+6.7.12-1~bpo12+1_amd64.deb
-RUN dpkg -i bpftool_7.3.0+6.7.12-1~bpo12+1_amd64.deb
-RUN rm bpftool_7.3.0+6.7.12-1~bpo12+1_amd64.deb
+# Compile and install bpftool
+RUN cd /tmp && git clone --branch v7.4.0 --recurse-submodules https://github.com/libbpf/bpftool.git
+RUN cd /tmp/bpftool/src && make && make install
 
 # Install python dependencies
 RUN pip install --no-cache-dir --upgrade pip jupyter protobuf pandas lxml pygdbmi perfetto
