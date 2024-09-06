@@ -153,5 +153,3 @@ RUN pip install --no-cache-dir --upgrade pip jupyter protobuf pandas lxml pygdbm
 # Start the jupyter server automatically
 ENV SHELL=/bin/bash
 CMD jupyter notebook --allow-root --no-browser --ip=* --NotebookApp.token=rrr
-EXPOSE 8888
-EXPOSE 9001
