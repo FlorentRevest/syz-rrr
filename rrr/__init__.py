@@ -126,7 +126,7 @@ class Config:
     def from_url(cls, url):
         return cls(cached_download(url, "config"))
 
-    def __init__(self, path="/dev/null", disabled_cfgs=[], enabled_cfgs=["DEBUG_INFO_BTF"]):
+    def __init__(self, path="/dev/null", disabled_cfgs=[], enabled_cfgs=["DEBUG_INFO_DWARF4", "DEBUG_INFO_BTF"]):
         self.path = path
         self.disabled_cfgs = disabled_cfgs
         self.enabled_cfgs = enabled_cfgs
