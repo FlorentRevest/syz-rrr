@@ -38,7 +38,7 @@ mem = "1G"
 # - nopti: share page tables between kernel and userspace, makes tracing easier
 # - nospectre_v2: disable RSB stuffing on context switches which confuses the
 #   callstack_instr plugin with many calls that never return
-extra_qemu_kernel_args = "-kernel {} -append \"root=/dev/sda rw init=/init nokaslr sysctl.kernel.randomize_va_space=0 mitigations=off\""
+extra_qemu_kernel_args = "-kernel {} -append \"root=/dev/sda rw init=/init nokaslr sysctl.kernel.randomize_va_space=0 mitigations=off console=ttyS0\""
 extra_qemu_machine_args = "-nographic -nodefaults"
 expect_prompt="(REPRODUCER DID NOT CRASH|KASAN|KCSAN|UBSAN|BUG|WARNING|INFO|protection fault)"
 
