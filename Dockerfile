@@ -31,6 +31,7 @@ RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends $(cat /tmp/build_dep.txt | grep -o '^[^#]*') && \
     apt-get clean && \
     python3 -m pip install --upgrade --no-cache-dir pip && \
+    python3 -m pip install --upgrade --no-cache-dir "packaging>22.0" && \ 
     python3 -m pip install --upgrade --no-cache-dir "cffi>1.14.3" && \
     python3 -m pip install --upgrade --no-cache-dir "capstone" && \
     curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
@@ -58,19 +59,23 @@ RUN cd /tmp && \
 RUN git -C /panda submodule update --init dtc && \
     git -C /panda rev-parse HEAD > /usr/local/panda_commit_hash && \
     mkdir  /panda/build && cd /panda/build && \
+    python3 -m pip install setuptools_scm && \
+    python3 -m pip install build && \
+    python3 -m setuptools_scm -r .. --strip-dev 2>/dev/null >/tmp/savedversion && \
     /panda/configure \
         --target-list="${TARGET_LIST}" \
         --prefix=/usr/local \
         --disable-numa \
-        --enable-llvm \
-        --extra-cflags="-Wno-error=deprecated-declarations"
+        --enable-llvm && \
+    rm -rf /panda/.git
 
-RUN make -C /panda/build -j "$(nproc)"
+RUN PRETEND_VERSION=$(cat /tmp/savedversion) make -C /panda/build -j "$(nproc)"
 
 #### Develop setup: panda built + pypanda installed (in develop mode) - Stage 3
 FROM builder as developer
 RUN cd /panda/panda/python/core && \
-    python3 setup.py develop && \
+    python3 create_panda_datatypes.py && \
+    PRETEND_VERSION=$(cat /tmp/savedversion) pip install -e . && \
     ldconfig && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 10 && \
     cd /panda && \
@@ -90,8 +95,15 @@ RUN  make -C /panda/build install && \
 
 # Install pypanda
 RUN cd /panda/panda/python/core && \
-    python3 setup.py install
+    python3 create_panda_datatypes.py --install && \
+    PRETEND_VERSION=$(cat /tmp/savedversion) pip install .
 RUN python3 -m pip install --ignore-install pycparser && python3 -m pip install --force-reinstall --no-binary :all: cffi
+# Build a whl too
+RUN cd /panda/panda/python/core && \
+    python3 create_panda_datatypes.py --install && \
+    PRETEND_VERSION=$(cat /tmp/savedversion) python3 -m build --wheel .
+
+RUN python3 -m pip show pandare
 
 # BUG: PANDA sometimes fails to generate all the necessary files for PyPANDA. This is a temporary fix to detect and fail when this occurs
 RUN ls -alt $(pip show pandare | grep Location: | awk '{print $2}')/pandare/autogen/
@@ -126,9 +138,9 @@ COPY --from=cleanup /usr/lib/libcapstone* /usr/lib/
 COPY --from=cleanup /lib/libosi.so /lib/libiohal.so /lib/liboffset.so /lib/
 
 # Workaround issue #901 - ensure LD_LIBRARY_PATH contains the panda plugins directories
-ENV LD_LIBRARY_PATH /usr/local/lib/python3.8/dist-packages/pandare/data/x86_64-softmmu/panda/plugins/:/usr/local/lib/python3.8/dist-packages/pandare/data/i386-softmmu/panda/plugins/:/usr/local/lib/python3.8/dist-packages/pandare/data/arm-softmmu/panda/plugins/:/usr/local/lib/python3.8/dist-packages/pandare/data/ppc-softmmu/panda/plugins/:/usr/local/lib/python3.8/dist-packages/pandare/data/mips-softmmu/panda/plugins/:/usr/local/lib/python3.8/dist-packages/pandare/data/mipsel-softmmu/panda/plugins/
+ENV LD_LIBRARY_PATH /usr/local/lib/python3.10/dist-packages/pandare/data/x86_64-softmmu/panda/plugins/:/usr/local/lib/python3.10/dist-packages/pandare/data/i386-softmmu/panda/plugins/:/usr/local/lib/python3.10/dist-packages/pandare/data/arm-softmmu/panda/plugins/:/usr/local/lib/python3.10/dist-packages/pandare/data/ppc-softmmu/panda/plugins/:/usr/local/lib/python3.10/dist-packages/pandare/data/mips-softmmu/panda/plugins/:/usr/local/lib/python3.10/dist-packages/pandare/data/mipsel-softmmu/panda/plugins/
 #PANDA_PATH is used by rust plugins
-ENV PANDA_PATH /usr/local/lib/python3.8/dist-packages/pandare/data
+ENV PANDA_PATH /usr/local/lib/python3.10/dist-packages/pandare/data
 
 # Ensure runtime dependencies are installed for our libpanda objects and panda plugins
 RUN ldconfig && \
@@ -144,7 +156,7 @@ RUN apt-get -qq update
 RUN apt-get -qq install -y gcc libguestfs-tools make flex bison libelf-dev bc linux-image-generic pahole gdb
 
 # Compile and install bpftool
-RUN cd /tmp && git clone --branch v7.4.0 --recurse-submodules https://github.com/libbpf/bpftool.git
+RUN cd /tmp && git clone --branch v7.5.0 --recurse-submodules https://github.com/libbpf/bpftool.git
 RUN cd /tmp/bpftool/src && make && make install
 
 # Install python dependencies
