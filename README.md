@@ -1,3 +1,5 @@
+<span style="color:red">**This project has been superseeded by [DejaView](https://github.com/FlorentRevest/DejaView)**</span>
+
 syz-rrr
 =======
 
